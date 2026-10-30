@@ -1,0 +1,16 @@
+{
+  "number": 1,
+  "body": "<!-- repo-audit:managed:start -->\n<!-- repo-audit:meta {\"body_digest\":\"5694615467ec53ec61dd021d60416562441ab59fd5b59052d642bc1d21064eee\",\"evidence_digest\":\"ef7fcf552884d35c305657936c16685259978728a46a7b58749178bc2bb01c85\",\"first_observed\":\"2026-10-30T12:00:00+00:00\",\"item_id\":\"item-0000000000000000000000000000000000000000000000000000000000000000\",\"last_observed\":\"2026-10-30T12:00:00+00:00\",\"repo_id\":\"test\",\"schema_version\":1,\"snapshot\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"state\":\"open\",\"triage_history\":[]} -->\n## Missing validation\n\nKind: finding. Severity: medium. Confidence: high.\nVerification: supported. State: open.\nLocation: src/main.py, line 2.\n\n### Evidence and mechanism\n\nInput reaches an unchecked operation\n\n### Impact\n\nInvalid result\n\n### Next action\n\nValidate input before the operation\n\n### Uncertainty\n\nNo execution proof\n\nSnapshot: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\n- Evidence: src/main.py, line 2; snippet SHA-256 bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n- Guidance: https\\[:\\]//example.org/primary\n<!-- repo-audit:managed:end -->",
+  "title": "Human title",
+  "state": "open",
+  "labels": [
+    {
+      "name": "repo-audit:managed"
+    },
+    {
+      "name": "human-label"
+    }
+  ],
+  "updated_at": "2026-10-30T12:00:00Z",
+  "created_at": "2026-10-29T12:00:00Z"
+}

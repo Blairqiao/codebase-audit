@@ -1,0 +1,1 @@
+<testsuites><testsuite name="sample"><testcase name="failure" file="src/sample.py" line="5"><failure type="AssertionError" message="expected true">trace</failure></testcase><testcase name="success"/><testcase name="skipped"><skipped/></testcase></testsuite></testsuites>

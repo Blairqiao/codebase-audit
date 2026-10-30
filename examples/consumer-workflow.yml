@@ -1,0 +1,22 @@
+# Copy after replacing both immutable-source placeholders and enrolling the destination.
+# 07:23 UTC Sunday is 02:23 Central daylight time or 01:23 Central standard time.
+# GitHub schedules are best effort and may be delayed. This example is not enabled here.
+name: Weekly repository audit
+on:
+  schedule:
+    - cron: '23 7 * * 0'
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  audit:
+    uses: YOUR_ORG/YOUR_AUDITOR/.github/workflows/repository-audit.yml@REPLACE_WITH_40_CHARACTER_SHA
+    with:
+      auditor_repository: YOUR_ORG/YOUR_AUDITOR
+      auditor_ref: REPLACE_WITH_THE_SAME_40_CHARACTER_SHA
+      profile: .audit/repo-audit.toml
+      model: REPLACE_WITH_EXACT_ENROLLED_MODEL
+      publish: true
+    secrets:
+      OPENAI_API_KEY: ${{ secrets.REPOSITORY_AUDIT_OPENAI_API_KEY }}

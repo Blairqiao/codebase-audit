@@ -1,0 +1,1 @@
+[{"filename":"src/sample.py","code":"F401","message":"unused import","location":{"row":1,"column":8},"end_location":{"row":1,"column":10},"fix":null}]

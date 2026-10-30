@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "id": "general",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "general.correctness",
+      "category": "correctness",
+      "applicability": [
+        "all"
+      ],
+      "instructions": "Trace inputs, callers, error paths, and tests. Identify a concrete trigger and observable impact. Passing analyzers do not establish correctness.",
+      "required_evidence": [
+        "repository location",
+        "trigger",
+        "mechanism",
+        "impact"
+      ],
+      "source": {
+        "url": "https://google.github.io/eng-practices/review/reviewer/looking-for.html",
+        "section": "Functionality and Context",
+        "sha256": "5946a2fa713dbafed9a2846e187be7705e3f3240c2b925f13d45530791c0e4af",
+        "retrieved": "2026-10-30",
+        "attribution": "Google Engineering Practices, summarized for this auditor",
+        "license": "CC-BY-3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/"
+      }
+    },
+    {
+      "id": "general.complexity",
+      "category": "maintenance",
+      "applicability": [
+        "all"
+      ],
+      "instructions": "Identify unnecessary complexity only when a concrete maintenance failure or costly task follows from it. Project architecture and style decisions take precedence for preferences.",
+      "required_evidence": [
+        "repository location",
+        "concrete maintenance cost",
+        "next action"
+      ],
+      "source": {
+        "url": "https://google.github.io/eng-practices/review/reviewer/looking-for.html",
+        "section": "Complexity",
+        "sha256": "5946a2fa713dbafed9a2846e187be7705e3f3240c2b925f13d45530791c0e4af",
+        "retrieved": "2026-10-30",
+        "attribution": "Google Engineering Practices, summarized for this auditor",
+        "license": "CC-BY-3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/"
+      }
+    },
+    {
+      "id": "general.concurrency",
+      "category": "concurrency",
+      "applicability": [
+        "all"
+      ],
+      "instructions": "Trace simultaneous operations and resource lifecycles. Report a concrete interleaving, ownership mistake, or unreleased resource with an observable consequence. Do not assert a race from shared state alone.",
+      "required_evidence": [
+        "repository locations",
+        "interleaving or lifecycle trigger",
+        "mechanism",
+        "impact"
+      ],
+      "source": {
+        "url": "https://google.github.io/eng-practices/review/reviewer/looking-for.html",
+        "section": "Functionality",
+        "sha256": "5946a2fa713dbafed9a2846e187be7705e3f3240c2b925f13d45530791c0e4af",
+        "retrieved": "2026-10-30",
+        "attribution": "Google Engineering Practices, summarized for this auditor",
+        "license": "CC-BY-3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/"
+      }
+    },
+    {
+      "id": "general.architecture",
+      "category": "architecture",
+      "applicability": [
+        "all"
+      ],
+      "instructions": "Compare interacting components with the documented project boundaries. Identify a concrete dependency or contract mismatch and its operational or maintenance impact. Project architecture preferences take precedence for discretionary design choices.",
+      "required_evidence": [
+        "interacting repository locations",
+        "documented boundary or contract",
+        "concrete impact"
+      ],
+      "source": {
+        "url": "https://google.github.io/eng-practices/review/reviewer/looking-for.html",
+        "section": "Design and Context",
+        "sha256": "5946a2fa713dbafed9a2846e187be7705e3f3240c2b925f13d45530791c0e4af",
+        "retrieved": "2026-10-30",
+        "attribution": "Google Engineering Practices, summarized for this auditor",
+        "license": "CC-BY-3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/"
+      }
+    },
+    {
+      "id": "general.tests",
+      "category": "testing",
+      "applicability": [
+        "all"
+      ],
+      "instructions": "Compare important behavior and edge cases with the actual assertions and fixtures. Missing tests require a concrete uncovered behavior and next test, rather than a general demand for more coverage.",
+      "required_evidence": [
+        "behavior location",
+        "relevant test location or concrete missing case",
+        "specific next assertion"
+      ],
+      "source": {
+        "url": "https://google.github.io/eng-practices/review/reviewer/looking-for.html",
+        "section": "Tests",
+        "sha256": "5946a2fa713dbafed9a2846e187be7705e3f3240c2b925f13d45530791c0e4af",
+        "retrieved": "2026-10-30",
+        "attribution": "Google Engineering Practices, summarized for this auditor",
+        "license": "CC-BY-3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/"
+      }
+    },
+    {
+      "id": "general.input-validation",
+      "category": "security",
+      "applicability": [
+        "all"
+      ],
+      "instructions": "Trace external or less trusted data across a concrete trust boundary. Check the receiving operation validates required types, bounds, and semantic constraints. Claim a security problem only with a concrete input path, failure mechanism, and privilege or resource impact. Input validation does not replace authorization, parameterized commands, or context-aware output encoding.",
+      "required_evidence": [
+        "untrusted input location",
+        "trust boundary or sink",
+        "invalid input trigger",
+        "security impact"
+      ],
+      "source": {
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html",
+        "section": "Input Validation Strategies and Common Pitfalls",
+        "sha256": "f4114aeba34f8c395ee3964a191445bb3e31bdef50fd70623257a8a5a1f34a7b",
+        "retrieved": "2026-10-30",
+        "attribution": "OWASP Cheat Sheet Series Team, summarized for this auditor",
+        "license": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/"
+      }
+    }
+  ]
+}

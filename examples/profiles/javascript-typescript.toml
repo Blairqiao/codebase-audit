@@ -1,0 +1,31 @@
+schema_version = 1
+repo_id = "example-typescript"
+root = "../../../example-typescript"
+report_dir = "../../../audit-results/example-typescript"
+component_roots = ["src", "tests"]
+decision_documents = ["README.md"]
+policy_packs = ["general"]
+
+# Paths are placeholders for already installed tools, not install commands.
+[[analyzers]]
+id = "eslint"
+category = "lint"
+command = ["/absolute/path/to/node", "/absolute/path/to/eslint/bin/eslint.js", "--format", "json", "."]
+version_command = ["/absolute/path/to/node", "/absolute/path/to/eslint/bin/eslint.js", "--version"]
+format = "eslint"
+cwd = "."
+pass_exit_codes = [0]
+finding_exit_codes = [1]
+timeout_seconds = 120
+max_output_bytes = 1048576
+
+[[analyzers]]
+id = "knip"
+category = "unused"
+command = ["/absolute/path/to/node", "/absolute/path/to/knip/bin/knip.js", "--reporter", "json"]
+format = "knip"
+cwd = "."
+pass_exit_codes = [0]
+finding_exit_codes = [1]
+timeout_seconds = 120
+max_output_bytes = 1048576

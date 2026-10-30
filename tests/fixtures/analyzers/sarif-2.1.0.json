@@ -1,0 +1,1 @@
+{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"fixture"}},"results":[{"ruleId":"TEST001","level":"warning","message":{"text":"bad call"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"src/sample.py"},"region":{"startLine":4,"startColumn":2}}}]}]}]}

@@ -1,0 +1,32 @@
+schema_version = 1
+repo_id = "example-python"
+root = "../../../example-python"
+report_dir = "../../../audit-results/example-python"
+component_roots = ["src", "tests"]
+decision_documents = ["README.md"]
+policy_packs = ["general"]
+
+# Replace the executable path with an already installed trusted environment.
+[[analyzers]]
+id = "ruff"
+category = "lint"
+command = ["/absolute/path/to/venv/bin/ruff", "check", "--output-format", "json", "."]
+version_command = ["/absolute/path/to/venv/bin/ruff", "--version"]
+format = "ruff"
+cwd = "."
+pass_exit_codes = [0]
+finding_exit_codes = [1]
+timeout_seconds = 120
+max_output_bytes = 1048576
+
+[[analyzers]]
+id = "pytest"
+category = "tests"
+command = ["/absolute/path/to/venv/bin/python", "-m", "pytest", "--junitxml=results.xml", "-q"]
+format = "junit"
+artifact = "results.xml"
+cwd = "."
+pass_exit_codes = [0]
+finding_exit_codes = [1]
+timeout_seconds = 300
+max_output_bytes = 1048576

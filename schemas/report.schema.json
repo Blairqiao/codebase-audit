@@ -1,0 +1,554 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://repo-audit.local/schemas/v1/report",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "repo_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "snapshot": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40,64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "outcome": {
+      "enum": [
+        "complete",
+        "partial",
+        "failed"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "finding",
+              "investigation"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "enum": [
+              "correctness",
+              "security",
+              "concurrency",
+              "maintenance",
+              "architecture",
+              "style",
+              "testing"
+            ]
+          },
+          "rule_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "primary_location": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "end_line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "symbol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "line"
+            ],
+            "additionalProperties": false
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "end_line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "snippet_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "path",
+                "line",
+                "snippet_sha256"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "mechanism": {
+            "type": "string",
+            "minLength": 1
+          },
+          "impact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "next_action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "confidence": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "problem_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "related_locations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "end_line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "symbol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "line"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "trigger_conditions": {
+            "type": "string"
+          },
+          "uncertainty": {
+            "type": "string"
+          },
+          "verification_level": {
+            "enum": [
+              "reported",
+              "supported",
+              "reproduced"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^item-[0-9a-f]{64}$"
+          },
+          "repo_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "snapshot": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40,64}$"
+          },
+          "first_observed": {
+            "type": "string"
+          },
+          "last_observed": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "open",
+              "dismissed",
+              "accepted-risk",
+              "resolved",
+              "needs-revalidation"
+            ]
+          },
+          "observation_status": {
+            "enum": [
+              "new",
+              "recurring",
+              "dismissed",
+              "accepted-risk",
+              "resolved",
+              "needs-revalidation"
+            ]
+          },
+          "triage_history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "enum": [
+                    "open",
+                    "dismissed",
+                    "accepted-risk",
+                    "resolved",
+                    "needs-revalidation"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "at": {
+                  "type": "string"
+                },
+                "expires_at": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "state",
+                "reason",
+                "at"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "github_issue": {
+            "type": "object",
+            "properties": {
+              "number": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "url": {
+                "type": "string"
+              },
+              "closed": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "execution_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "artifact_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "observation": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "artifact_sha256",
+                "observation"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "identity_match": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "enum": [
+                  "ambiguous"
+                ]
+              },
+              "candidates": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "status",
+              "candidates"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "rule_id",
+          "confidence",
+          "first_observed",
+          "source_refs",
+          "observation_status",
+          "primary_location",
+          "severity",
+          "mechanism",
+          "problem_key",
+          "repo_id",
+          "kind",
+          "trigger_conditions",
+          "verification_level",
+          "last_observed",
+          "triage_history",
+          "id",
+          "next_action",
+          "category",
+          "state",
+          "uncertainty",
+          "evidence",
+          "impact",
+          "snapshot",
+          "related_locations",
+          "title"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "repo_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshot": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40,64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inventoried": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "assessed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "scope_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assessed": {
+                "type": "boolean"
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ranges": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "start_line": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "end_line": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "start_line",
+                    "end_line"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "deferred_reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope_id",
+              "assessed"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "observed_reads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start_line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "end_line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "deferred": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "scope_id": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "repo_id",
+        "snapshot",
+        "inventoried",
+        "assessed",
+        "observed_reads",
+        "deferred",
+        "limitations"
+      ],
+      "additionalProperties": false
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "analyzers": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "policy": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "publication": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "repo_id",
+    "snapshot",
+    "outcome",
+    "items",
+    "coverage"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "complete"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "snapshot": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40,64}$"
+          }
+        }
+      }
+    }
+  ]
+}

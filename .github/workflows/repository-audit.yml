@@ -1,0 +1,233 @@
+name: Reusable repository audit
+on:
+  workflow_call:
+    inputs:
+      auditor_repository:
+        required: true
+        type: string
+      auditor_ref:
+        description: Immutable 40-character SHA of the trusted auditor source
+        required: true
+        type: string
+      profile:
+        description: Enrolled profile within the consumer checkout
+        required: true
+        type: string
+      model:
+        description: Exact configured model, no substitution
+        required: true
+        type: string
+      publish:
+        default: false
+        type: boolean
+    secrets:
+      OPENAI_API_KEY:
+        required: true
+permissions:
+  contents: read
+jobs:
+  collect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Validate immutable auditor enrollment
+        env:
+          AUDITOR_REF: ${{ inputs.auditor_ref }}
+          PROFILE: ${{ inputs.profile }}
+        run: |
+          [[ "$AUDITOR_REF" =~ ^[0-9a-f]{40}$ ]] || exit 2
+          [[ "$PROFILE" != /* && "$PROFILE" != *..* ]] || exit 2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ inputs.auditor_repository }}
+          ref: ${{ inputs.auditor_ref }}
+          path: auditor
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          path: target
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install trusted auditor in a disposable environment
+        run: |
+          python -m venv "$RUNNER_TEMP/auditor-venv"
+          "$RUNNER_TEMP/auditor-venv/bin/pip" install ./auditor
+      - name: Collect enrolled commands without model or publisher credentials
+        env:
+          PROFILE: ${{ inputs.profile }}
+        run: '"$RUNNER_TEMP/auditor-venv/bin/repo-audit" collect --config "target/$PROFILE" --run-dir "$RUNNER_TEMP/audit-run"'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: audit-bundle
+          path: ${{ runner.temp }}/audit-run
+          include-hidden-files: false
+          retention-days: 7
+  review:
+    needs: collect
+    if: ${{ always() && needs.collect.result != 'cancelled' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      npm_config_prefix: ${{ runner.temp }}/audit-npm
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ inputs.auditor_repository }}
+          ref: ${{ inputs.auditor_ref }}
+          path: auditor
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: audit-bundle
+          path: ${{ runner.temp }}/audit-run
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install trusted runtime outside the target tree
+        run: |
+          sudo python -m venv /opt/repo-audit
+          sudo /opt/repo-audit/bin/pip install ./auditor
+          sudo useradd --create-home --shell /bin/false audit-reader
+          sudo chmod o+x "$RUNNER_TEMP"
+          chmod -R a+rX "$RUNNER_TEMP/audit-run"
+      - name: Install the pinned official CLI without starting a model
+        uses: openai/codex-action@13e9c17417b29e9a276f73ec6ed7fb574137d3c3
+        with:
+          codex-version: '0.163.0-alpha.11.2'
+          safety-strategy: unprivileged-user
+          codex-user: audit-reader
+          codex-home: ${{ runner.temp }}/audit-runtime/home
+      - name: Prepare isolated profile and bounded executable interceptor
+        id: prepare
+        env:
+          MODEL: ${{ inputs.model }}
+        run: |
+          /opt/repo-audit/bin/python -m repo_audit.ci --run-dir "$RUNNER_TEMP/audit-run" --runtime "$RUNNER_TEMP/audit-runtime" --real-codex "$npm_config_prefix/bin/codex" --model "$MODEL"
+          sudo chmod -R a+rX "$RUNNER_TEMP/audit-runtime"
+          sudo chown -R audit-reader "$RUNNER_TEMP/audit-runtime/home" "$RUNNER_TEMP/audit-runtime/work"
+          sudo chown audit-reader "$RUNNER_TEMP/audit-runtime" "$RUNNER_TEMP/audit-run"
+          echo "$RUNNER_TEMP/audit-runtime/bin" >> "$GITHUB_PATH"
+          echo "$npm_config_prefix/bin" >> "$GITHUB_PATH"
+      - name: Verify interception and prerequisite bundle
+        env:
+          AUDIT_PATH: ${{ steps.prepare.outputs.path }}
+        run: |
+          export PATH="$AUDIT_PATH"
+          test "$(command -v codex)" = "$RUNNER_TEMP/audit-runtime/bin/codex"
+          test -f "$RUNNER_TEMP/audit-run/manifest.json"
+      - name: One bounded review scope through the official action
+        uses: openai/codex-action@13e9c17417b29e9a276f73ec6ed7fb574137d3c3
+        env:
+          PATH: ${{ steps.prepare.outputs.path }}
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          codex-version: '0.163.0-alpha.11.2'
+          codex-home: ${{ steps.prepare.outputs.codex_home }}
+          permission-profile: audit
+          safety-strategy: unprivileged-user
+          codex-user: audit-reader
+          working-directory: ${{ steps.prepare.outputs.working_directory }}
+          prompt-file: ${{ runner.temp }}/audit-run/review-prompt.md
+          output-file: ${{ runner.temp }}/audit-run/agent-output.json
+          output-schema-file: ${{ runner.temp }}/audit-run/agent-output.schema.json
+          model: ${{ inputs.model }}
+          codex-args: '["--strict-config","--ephemeral","--json"]'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: audit-agent-result
+          path: |
+            ${{ runner.temp }}/audit-run/agent-output.json
+            ${{ runner.temp }}/audit-run/action-execution.json
+          if-no-files-found: warn
+          retention-days: 7
+  finalize:
+    needs: [collect, review]
+    if: ${{ always() && needs.collect.result != 'cancelled' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ inputs.auditor_repository }}
+          ref: ${{ inputs.auditor_ref }}
+          path: auditor
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: audit-bundle
+          path: ${{ runner.temp }}/audit-run
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        continue-on-error: true
+        with:
+          name: audit-agent-result
+          path: ${{ runner.temp }}/audit-run
+      - name: Finalize with read-only shared decisions and no model credential
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m venv "$RUNNER_TEMP/auditor-venv"
+          "$RUNNER_TEMP/auditor-venv/bin/pip" install ./auditor
+          if test -f "$RUNNER_TEMP/audit-run/manifest.json"; then
+            "$RUNNER_TEMP/auditor-venv/bin/repo-audit" finalize --run-dir "$RUNNER_TEMP/audit-run" --agent-output "$RUNNER_TEMP/audit-run/agent-output.json"
+          else
+            test -f "$RUNNER_TEMP/audit-run/report.json"
+            exit 3
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: audit-report
+          path: |
+            ${{ runner.temp }}/audit-run/report.json
+            ${{ runner.temp }}/audit-run/report.md
+            ${{ runner.temp }}/audit-run/coverage.json
+            ${{ runner.temp }}/audit-run/execution.json
+            ${{ runner.temp }}/audit-run/manifest.json
+            ${{ runner.temp }}/audit-run/manifest.sha256
+          retention-days: 30
+  publish:
+    needs: finalize
+    if: ${{ always() && inputs.publish && needs.finalize.result != 'cancelled' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: repository-audit-publish-${{ github.repository }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ inputs.auditor_repository }}
+          ref: ${{ inputs.auditor_ref }}
+          path: auditor
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: audit-report
+          path: ${{ runner.temp }}/audit-run
+      - name: Publish enrolled validated items, without target code or model key
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m venv "$RUNNER_TEMP/auditor-venv"
+          "$RUNNER_TEMP/auditor-venv/bin/pip" install ./auditor
+          "$RUNNER_TEMP/auditor-venv/bin/repo-audit" publish --run-dir "$RUNNER_TEMP/audit-run" --apply
